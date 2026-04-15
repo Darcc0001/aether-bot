@@ -1,0 +1,63 @@
+services:
+  - type: web
+    name: aether-verification-web
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm run oauth
+    autoDeploy: true
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        value: 1493836596213186712
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_GUILD_ID
+        value: 1493815257750048900
+      - key: VERIFY_CHANNEL_ID
+        value: 1493853290335703182
+      - key: UNVERIFIED_ROLE_ID
+        value: 1493852376187273317
+      - key: VERIFIED_ROLE_ID
+        value: 1493852551211389061
+      - key: OAUTH_STATE_SECRET
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: OAUTH_REDIRECT_URI
+        sync: false
+      - key: BRAND_LOGO_URL
+        sync: false
+      - key: AUTO_POST_VERIFICATION_PANEL
+        value: "false"
+  - type: worker
+    name: aether-discord-bot
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm run bot
+    autoDeploy: true
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        value: 1493836596213186712
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_GUILD_ID
+        value: 1493815257750048900
+      - key: VERIFY_CHANNEL_ID
+        value: 1493853290335703182
+      - key: UNVERIFIED_ROLE_ID
+        value: 1493852376187273317
+      - key: VERIFIED_ROLE_ID
+        value: 1493852551211389061
+      - key: OAUTH_STATE_SECRET
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: OAUTH_REDIRECT_URI
+        sync: false
+      - key: BRAND_LOGO_URL
+        sync: false
+      - key: AUTO_POST_VERIFICATION_PANEL
+        value: "true"
