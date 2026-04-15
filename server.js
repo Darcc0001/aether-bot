@@ -453,6 +453,8 @@ app.get('/callback', async (req, res) => {
   try {
     const tokenData = await exchangeCodeForToken(code);
 
+    console.log('OAuth token scopes:', tokenData.scope || '(missing)');
+
     if (!state) {
       return res.send(`OAuth success: ${JSON.stringify(tokenData)}`);
     }
