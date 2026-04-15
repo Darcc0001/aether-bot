@@ -82,7 +82,12 @@ async function ensureVerificationPanel() {
   });
 
   if (existingPanel) {
-    console.log('Verification panel already exists in the configured channel.');
+    await existingPanel.edit({
+      embeds: [buildVerificationEmbed()],
+      components: [buildVerificationRow()],
+    });
+
+    console.log('Updated existing verification panel.');
     return;
   }
 
