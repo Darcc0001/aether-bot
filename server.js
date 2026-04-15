@@ -92,6 +92,17 @@ function getAuthorizeUrl() {
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
 
+function getLoginAuthorizeUrl() {
+  const params = new URLSearchParams({
+    client_id: process.env.DISCORD_CLIENT_ID,
+    redirect_uri: process.env.OAUTH_REDIRECT_URI,
+    response_type: 'code',
+    scope: 'identify',
+  });
+
+  return `https://discord.com/oauth2/authorize?${params.toString()}`;
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -344,7 +355,7 @@ async function exchangeCodeForToken(code) {
     }
   );
 
-  return response.data.access_token;
+  return response.data;
 }
 
 async function getDiscordUser(accessToken) {
@@ -413,6 +424,10 @@ app.get('/verify', (_req, res) => {
   res.redirect(getAuthorizeUrl());
 });
 
+app.get('/login', (_req, res) => {
+  res.redirect(getLoginAuthorizeUrl());
+});
+
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   const state = req.query.state;
@@ -431,20 +446,25 @@ app.get('/callback', async (req, res) => {
   if (!code) {
     return res
       .status(400)
-      .send(renderErrorPage('The callback did not include an authorization code.'));
-  }
-
-  if (!isValidState(state)) {
-    return res
-      .status(400)
-      .send(renderErrorPage('The verification session expired. Start again from the Verify button.'));
+      .send('No code provided');
   }
 
   try {
-    const accessToken = await exchangeCodeForToken(code);
-    const user = await getDiscordUser(accessToken);
+    const tokenData = await exchangeCodeForToken(code);
 
-    await addUserToGuild(user.id, accessToken);
+    if (!state) {
+      return res.send(`OAuth success: ${JSON.stringify(tokenData)}`);
+    }
+
+    if (!isValidState(state)) {
+      return res
+        .status(400)
+        .send(renderErrorPage('The verification session expired. Start again from the Verify button.'));
+    }
+
+    const user = await getDiscordUser(tokenData.access_token);
+
+    await addUserToGuild(user.id, tokenData.access_token);
     await removeRole(user.id, config.unverifiedRoleId);
     await addRole(user.id, config.verifiedRoleId);
 
@@ -453,11 +473,17 @@ app.get('/callback', async (req, res) => {
   } catch (error) {
     logDiscordError('Verification callback failed:', error);
 
-    return res.status(500).send(
-      renderErrorPage(
-        'The account was authorized, but the server roles could not be updated. Please try again in a moment.'
-      )
-    );
+    if (!state) {
+      return res.send('OAuth failed');
+    }
+
+    return res
+      .status(500)
+      .send(
+        renderErrorPage(
+          'The account was authorized, but the server roles could not be updated. Please try again in a moment.'
+        )
+      );
   }
 });
 
